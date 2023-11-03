@@ -10,6 +10,9 @@
 import re
 
 REGISTERS = [ "$s5", "$s4", "$s3", "$s2", "$s1", "$s0","$t9","$t8", "$t7", "$t6", "$t5", "$t4", "$t3", "$t2", "$t1", "$t0"]
+TEMPRANOSABER = [["$t9",""],["$t8",""], ["$t7",""],["$t6",""] , ["$t5",""], ["$t4",""], ["$t3",""], ["$t2",""], ["$t1",""], ["$t0",""]]
+TEMPRANO = ["$t9","$t8", "$t7", "$t6", "$t5", "$t4", "$t3", "$t2", "$t1", "$t0"]
+AFUNCIONES = ["$a3","$a2","$a1","$a0"]
 
 
 def whileStatementArmHandler(first_operand,second_operand,operation,inter,i):
@@ -316,7 +319,8 @@ def read_lines(inter):
                 if "." in parts[0]:
                     new_parts = parts[0].split(".")
                     arm_code += new_parts[1] + '\n'
-                    arm_code += "\tjal " + new_parts[0] + '\n'
+                    if new_parts[1] == "main:":
+                        arm_code += "\tjal " + new_parts[0] + '\n'
                 else:
                     arm_code += parts[0] + '\n'
 
@@ -368,15 +372,21 @@ def read_lines(inter):
 
             # m#[#] = literal
             elif parts[0] != "func" and parts[2].isnumeric():
-                reg1 = REGISTERS.pop()
+
+            # # Recorrer la lista anidada para encontrar la primera entrada vacía y asignar el valor
+            # for registro in TEMPRANOSABER:
+            #     if registro[1] == "":
+            #         registro[1] = valor_asignado
+            #         break
+                reg1 = TEMPRANO.pop()
                 right_side = parts[2]
 
                 left_side = parts[0]
                 memory_address = getBracketsContent(left_side)
 
-                arm_code += "\tmove " + reg1 + ", #" + str(right_side) + "\n"
+                arm_code += "\tli " + reg1 + ", " + str(right_side) + "\n"
                 arm_code += "\tsw " + reg1 + ", " + str(memory_address) + "($sp)\n"
-                REGISTERS.append(reg1)
+                TEMPRANO.append(reg1)
 
             # m#[#] = t#
             elif parts[0] != "func" and re.search("^t.*[0-9]$", parts[2]): #check if hast pattern for t0 - t9
@@ -560,6 +570,23 @@ def read_lines(inter):
             if parts[2] == '_MCall':
                 push_param = inter[i-1].split(' ')
                 param = inter[i-2].split(' ')
+
+                if parts[4].isnumeric():
+                    cantidadEntradas = 0
+                    QueNoSeMePierdaAFUNCIONES = []
+                    QueNoSeMePierdaTEMPRANO = []
+                    while cantidadEntradas != int(parts[4]):
+                        reg1 = AFUNCIONES.pop()
+                        teg2 = TEMPRANO.pop()
+                        QueNoSeMePierdaAFUNCIONES.append(reg1)
+                        QueNoSeMePierdaTEMPRANO.append(teg2)
+                        arm_code += "\tmove " + reg1 + ", " + str(teg2) + "\n"
+                        cantidadEntradas += 1
+                    QueNoSeMePierdaAFUNCIONES.reverse()
+                    QueNoSeMePierdaTEMPRANO.reverse()
+                    for elemento1, elemento2 in zip(QueNoSeMePierdaAFUNCIONES, QueNoSeMePierdaTEMPRANO):
+                        AFUNCIONES.append(elemento1)
+                        TEMPRANO.append(elemento2)
 
                 if param[0] == 'param':
                     if 't' in param[1]:

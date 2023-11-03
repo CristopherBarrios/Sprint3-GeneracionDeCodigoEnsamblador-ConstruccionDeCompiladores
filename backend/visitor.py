@@ -106,9 +106,9 @@ class MyYAPLVisitor(YAPLVisitor):
                 for corredor in self.total_scopes["main"].expr.bloc:
                     if "expr" in dir(corredor) and "expr1" in dir(corredor) and "expr2" in dir(corredor) and "name" in dir(corredor) and "type" in dir(corredor):
                         contador.append(corredor.name)
-                if "main" not in contador:
-                    new_error = tables.Error("No se encuentra (new Main).main(); en main", ctx.start.line, ctx.start.column)
-                    self.ERRORS.append(new_error)
+                # if "main" not in contador:
+                #     new_error = tables.Error("No se encuentra (new Main).main(); en main", ctx.start.line, ctx.start.column)
+                #     self.ERRORS.append(new_error)
             else:
                 new_error = tables.Error("No se encuentra { } en main", ctx.start.line, ctx.start.column)
                 self.ERRORS.append(new_error)
