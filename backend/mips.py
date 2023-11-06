@@ -10,9 +10,12 @@
 import re
 
 REGISTERS = [ "$s5", "$s4", "$s3", "$s2", "$s1", "$s0","$t9","$t8", "$t7", "$t6", "$t5", "$t4", "$t3", "$t2", "$t1", "$t0"]
-TEMPRANOSABER = [["$t9",""],["$t8",""], ["$t7",""],["$t6",""] , ["$t5",""], ["$t4",""], ["$t3",""], ["$t2",""], ["$t1",""], ["$t0",""]]
 TEMPRANO = ["$t9","$t8", "$t7", "$t6", "$t5", "$t4", "$t3", "$t2", "$t1", "$t0"]
-AFUNCIONES = ["$a3","$a2","$a1","$a0"]
+
+
+TEMPRANOSABER = [["$t9",""],["$t8",""], ["$t7",""],["$t6",""] , ["$t5",""], ["$t4",""], ["$t3",""], ["$t2",""], ["$t1",""], ["$t0",""]]
+AFUNCIONES = [["$a3",""],["$a2",""],["$a1",""],["$a0",""]]
+GUARDADOR = [["$v1",""],["$v0",""]]
 
 
 def whileStatementArmHandler(first_operand,second_operand,operation,inter,i):
@@ -282,6 +285,7 @@ def read_lines(inter):
     arm_code_all = ""
     function_alocated_space = 0
     printi_consola = ".data\n"
+    out_int = False
     text_consola = ""
     actual_temp = 0
     varsito = 0
@@ -373,15 +377,18 @@ def read_lines(inter):
             # m#[#] = literal
             elif parts[0] != "func" and parts[2].isnumeric():
 
-            # # Recorrer la lista anidada para encontrar la primera entrada vacía y asignar el valor
-            # for registro in TEMPRANOSABER:
-            #     if registro[1] == "":
-            #         registro[1] = valor_asignado
-            #         break
-                reg1 = TEMPRANO.pop()
                 right_side = parts[2]
 
                 left_side = parts[0]
+
+                # Recorrer la lista anidada para encontrar la primera entrada vacía y asignar el valor
+                for registro in reversed(TEMPRANOSABER):
+                    if registro[1] == "":
+                        reg1 = registro[0]
+                        registro[1] = left_side
+                        break
+
+
                 memory_address = getBracketsContent(left_side)
 
                 arm_code += "\tli " + reg1 + ", " + str(right_side) + "\n"
@@ -389,7 +396,7 @@ def read_lines(inter):
                 TEMPRANO.append(reg1)
 
             # m#[#] = t#
-            elif parts[0] != "func" and re.search("^t.*[0-9]$", parts[2]): #check if hast pattern for t0 - t9
+            elif parts[0] != "func" and re.search("^t.*[0-9]$", parts[2]) and parts[0] != "push": #check if hast pattern for t0 - t9
                 next_inter_line = inter[i+1].split(' ')
                 if len(next_inter_line) > 3:
                     if  next_inter_line[3] == "out_string" or next_inter_line[3] == "in_string" or next_inter_line[3] == "in_int" or next_inter_line[3] == "out_int":
@@ -424,10 +431,39 @@ def read_lines(inter):
                 # i += 1
                 # continue
 
+            # push param t#
+            elif parts[0] == 'push' and re.search("^t.*[0-9]$", parts[2]):
+                # Encontrar el último registro que contiene algo
+                resultado = next((registro[0] for registro in TEMPRANOSABER if registro[1] != ""), None)
+
+                # Recorrer la lista anidada para encontrar la primera entrada vacía y asignar el valor
+                for registro in reversed(AFUNCIONES):
+                    if registro[1] == "":
+                        reg1 = registro[0]
+                        registro[1] = resultado
+                        break
+
+                arm_code += "\tmove " + reg1 + ", " + str(resultado) + "\n"
+
             # push param m#[#]
             elif parts[0] == 'push':
-                i += 1
-                continue
+
+                # Utilizando una comprensión de lista para buscar la cadena
+                resultado = next((registro[0] for registro in reversed(TEMPRANOSABER) if registro[1] == parts[2]), None)
+                
+
+                # Recorrer la lista anidada para encontrar la primera entrada vacía y asignar el valor
+                for registro in reversed(AFUNCIONES):
+                    if registro[1] == "":
+                        reg1 = registro[0]
+                        registro[1] = resultado
+                        break
+
+                arm_code += "\tmove " + reg1 + ", " + str(resultado) + "\n"
+
+
+                # i += 1
+                # continue
 
             # t# = ~m#[#]
             elif "~" in parts[2]:
@@ -455,7 +491,7 @@ def read_lines(inter):
 
             elif '"' in parts[2]:
                 reg1 = REGISTERS.pop()
-                arm_code += "\tmove " + reg1 + ", " + "=text" + str(contoText) + "\n"
+                arm_code += "\tla " + reg1 + ", " + "text" + str(contoText) + "\n"
                 text_consola += "text" + str(contoText) + ":"
                 text_consola += "\t.asciiz " + str(parts[2])  + "\n"
                 contoText += 1
@@ -571,22 +607,31 @@ def read_lines(inter):
                 push_param = inter[i-1].split(' ')
                 param = inter[i-2].split(' ')
 
-                if parts[4].isnumeric():
-                    cantidadEntradas = 0
-                    QueNoSeMePierdaAFUNCIONES = []
-                    QueNoSeMePierdaTEMPRANO = []
-                    while cantidadEntradas != int(parts[4]):
-                        reg1 = AFUNCIONES.pop()
-                        teg2 = TEMPRANO.pop()
-                        QueNoSeMePierdaAFUNCIONES.append(reg1)
-                        QueNoSeMePierdaTEMPRANO.append(teg2)
-                        arm_code += "\tmove " + reg1 + ", " + str(teg2) + "\n"
-                        cantidadEntradas += 1
-                    QueNoSeMePierdaAFUNCIONES.reverse()
-                    QueNoSeMePierdaTEMPRANO.reverse()
-                    for elemento1, elemento2 in zip(QueNoSeMePierdaAFUNCIONES, QueNoSeMePierdaTEMPRANO):
-                        AFUNCIONES.append(elemento1)
-                        TEMPRANO.append(elemento2)
+                if parts[3] == "out_int,":
+                    out_int = True
+
+
+                    
+
+
+
+
+                # if parts[4].isnumeric():
+                #     cantidadEntradas = 0
+                #     QueNoSeMePierdaAFUNCIONES = []
+                #     QueNoSeMePierdaTEMPRANO = []
+                #     while cantidadEntradas != int(parts[4]):
+                #         reg1 = AFUNCIONES.pop()
+                #         teg2 = TEMPRANO.pop()
+                #         QueNoSeMePierdaAFUNCIONES.append(reg1)
+                #         QueNoSeMePierdaTEMPRANO.append(teg2)
+                #         arm_code += "\tmove " + reg1 + ", " + str(teg2) + "\n"
+                #         cantidadEntradas += 1
+                #     QueNoSeMePierdaAFUNCIONES.reverse()
+                #     QueNoSeMePierdaTEMPRANO.reverse()
+                #     for elemento1, elemento2 in zip(QueNoSeMePierdaAFUNCIONES, QueNoSeMePierdaTEMPRANO):
+                #         AFUNCIONES.append(elemento1)
+                #         TEMPRANO.append(elemento2)
 
                 if param[0] == 'param':
                     if 't' in param[1]:
@@ -607,6 +652,27 @@ def read_lines(inter):
                                     REGISTERS.append(reg1)
                 arm_code += "\tjal " + str(parts[3])  + "\n"
 
+                if parts[4].isnumeric():
+                    # Recorrer la lista anidada para encontrar la primera entrada vacía y asignar el valor
+                    for registro in reversed(GUARDADOR):
+                        if registro[1] == "":
+                            reg0 = registro[0]
+                            break
+
+                    # Recorrer la lista anidada para encontrar la primera entrada vacía y asignar el valor
+                    for registro in reversed(TEMPRANOSABER):
+                        if registro[1] == "":
+                            reg1 = registro[0]
+                            registro[1] = reg0
+                            break
+
+                    # Actualizar las últimas n tuplas en blanco
+                    for peroque in range(1, int(parts[4]) + 1):
+                        if peroque <= len(AFUNCIONES):
+                            AFUNCIONES[-peroque][1] = ""
+
+                    arm_code += "\tmove " + reg1 + ", " + str(reg0) + "\n"
+
         arm_code_all += arm_code
         armct = arm_code.replace("\t","")
         list_temp = armct.split("\n")
@@ -615,8 +681,16 @@ def read_lines(inter):
                 armc.append(codeline)
         i += 1
 
+    if out_int == True:
+        arm_code_all += "out_int:\n" 
+        arm_code_all += "\tli $v0, 1\n"  
+        arm_code_all +=  "\tsyscall\n" 
+        arm_code_all += "\tjr $ra\n"
+
     arm_code_all += printi_consola
     arm_code_all += text_consola
+
+
     return arm_code_all
 
 
