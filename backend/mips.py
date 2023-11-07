@@ -12,6 +12,7 @@ import re
 ANTREGISTERS = [ "$s5", "$s4", "$s3", "$s2", "$s1", "$s0","$t9","$t8", "$t7", "$t6", "$t5", "$t4", "$t3", "$t2", "$t1", "$t0"]
 TEMPRANO = ["$t9","$t8", "$t7", "$t6", "$t5", "$t4", "$t3", "$t2", "$t1", "$t0"]
 REGISTERS = ["$s7", "$s6", "$s5", "$s4", "$s3", "$s2", "$s1", "$s0"]
+AAAAAA = ["$a3","$a2","$a1","$a0"]
 
 
 SEMPRANOSABER = [ ["$s7",""],["$s6",""] , ["$s5",""], ["$s4",""], ["$s3",""], ["$s2",""], ["$s1",""], ["$s0",""]]
@@ -169,6 +170,7 @@ def operationsFunction(first_operand,second_operand,operation,inter,i):
     arm_code = ''
     last_line = inter[i-1].split(' ')
     actual_line = inter[i].split(' ')
+    next_line = inter[i+1].split(' ')
     prev_temp = False
     if 'func' not in last_line and '_MCall' not in last_line and len(last_line)!=1 and len(last_line)!=3: 
         #print(' '.join(last_line))
@@ -216,11 +218,44 @@ def operationsFunction(first_operand,second_operand,operation,inter,i):
     else:
         memory_address2 = getBracketsContent(second_operand)
 
-    regi1 = REGISTERS.pop()
-    regi2 = REGISTERS.pop()
+    # regi1 = REGISTERS.pop()
+    # regi2 = REGISTERS.pop()
+
+    numero = 0
+
+    
+    # Recorrer la lista anidada para encontrar la primera entrada vacía y asignar el valor
+    for registro in reversed(SEMPRANOSABER):
+        if registro[1] == "":
+            regi1 = registro[0]
+            registro[1] = AAAAAA.pop()
+            numero += 1
+            break
+
+    # Recorrer la lista anidada para encontrar la primera entrada vacía y asignar el valor
+    for registro in reversed(SEMPRANOSABER):
+        if registro[1] == "":
+            regi2 = registro[0]
+            registro[1] = AAAAAA.pop()
+            numero += 1
+            break
 
     arm_code += "\tlw " + regi1 + ", " + str(memory_address) + "($sp)\n"
     arm_code += "\tlw " + regi2 + ", " + str(memory_address) + "($sp)\n"
+
+    if not re.search("^t.*[0-9]$", last_line[0]):
+        # Recorrer la lista anidada para encontrar la primera entrada vacía y asignar el valor
+        for registro in reversed(SEMPRANOSABER):
+            if registro[0] == regi1:
+                movimiento1 = registro[1] 
+                break
+
+        for registro in reversed(SEMPRANOSABER):
+            if registro[0] == regi2:
+                movimiento2 = registro[1] 
+                break
+        arm_code += "\tmove " + regi1 + ", " + movimiento1 + "\n"
+        arm_code += "\tmove " + regi2 + ", " + movimiento2 + "\n"
 #
     #des.addDRegister(regi1,[actual_line[2],actual_line[4]])
     #des.addDRegister(regi2,[actual_line[2],actual_line[4]])
@@ -233,18 +268,33 @@ def operationsFunction(first_operand,second_operand,operation,inter,i):
     #des.addDAccess(memory_address,[regi1])
     #des.addDAccess(memory_address2,[regi2])
 #
-    if operation == 'add': arm_code += "\tadd " + regi1 + ", " + regi1 + ", " + regi2 + "\n"
+    if operation == 'add':
+        arm_code += "\tadd " + regi1 + ", " + regi1 + ", " + regi2 + "\n"
+
     elif operation == 'sub': arm_code += "\tsub " + regi1 + ", " + regi1 + ", " + regi2 + "\n"
     elif operation == 'mul': arm_code += "\tmul " + regi1 + ", " + regi1 + ", " + regi2 + "\n"
     elif operation == 'div': arm_code += "\tdiv " + regi1 + ", " + regi1 + ", " + regi2 + "\n"
 
+
+            # Recorrer la lista anidada para encontrar la primera entrada vacía y asignar el valor
+    for registro in reversed(SEMPRANOSABER):
+        if registro[0] == regi1:
+            regi1 = registro[0]
+            registro[1] = ""
+            break
+
     #!handle temporals like m#[#] = t# /////////////////////", " + str(memory_address) + "($sp)\n"
     if int(memory_address) > int(memory_address2):
         arm_code += "\tsw " + regi1 + ", " + str(int(memory_address) + 4) + "($sp)\n"
-        arm_code += "\tmove " + "$v0" + ", " + regi1  + "\n"
+
+        aveeeer = re.search("^t.*[0-9]$", next_line[0])
+        if not aveeeer:
+            arm_code += "\tmove " + "$v0" + ", " + regi1  + "\n"
     else:
         arm_code += "\tsw " + regi1 + ", " + str(int(memory_address) + 4) + "($sp)\n"
-        arm_code += "\tmove " + "$v0" + ", " + regi1  + "\n"
+        aveeeer = re.search("^t.*[0-9]$", next_line[0])
+        if not aveeeer:
+            arm_code += "\tmove " + "$v0" + ", " + regi1  + "\n"
 
     #?if last function
         #arm_code += "\tmove " + regi1 + " " +  str(function_alocated_space-4) + "\n"
