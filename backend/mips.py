@@ -9,14 +9,18 @@
 
 import re
 
-REGISTERS = [ "$s5", "$s4", "$s3", "$s2", "$s1", "$s0","$t9","$t8", "$t7", "$t6", "$t5", "$t4", "$t3", "$t2", "$t1", "$t0"]
+ANTREGISTERS = [ "$s5", "$s4", "$s3", "$s2", "$s1", "$s0","$t9","$t8", "$t7", "$t6", "$t5", "$t4", "$t3", "$t2", "$t1", "$t0"]
 TEMPRANO = ["$t9","$t8", "$t7", "$t6", "$t5", "$t4", "$t3", "$t2", "$t1", "$t0"]
+REGISTERS = ["$s7", "$s6", "$s5", "$s4", "$s3", "$s2", "$s1", "$s0"]
 
 
+SEMPRANOSABER = [ ["$s7",""],["$s6",""] , ["$s5",""], ["$s4",""], ["$s3",""], ["$s2",""], ["$s1",""], ["$s0",""]]
 TEMPRANOSABER = [["$t9",""],["$t8",""], ["$t7",""],["$t6",""] , ["$t5",""], ["$t4",""], ["$t3",""], ["$t2",""], ["$t1",""], ["$t0",""]]
 AFUNCIONES = [["$a3",""],["$a2",""],["$a1",""],["$a0",""]]
 GUARDADOR = [["$v1",""],["$v0",""]]
 
+def limpiar_lista(lista):
+    return [[reg, valor] for reg, valor in lista if valor.strip() != ""]
 
 def whileStatementArmHandler(first_operand,second_operand,operation,inter,i):
     actual_line = inter[i].split(' ')
@@ -237,8 +241,10 @@ def operationsFunction(first_operand,second_operand,operation,inter,i):
     #!handle temporals like m#[#] = t# /////////////////////", " + str(memory_address) + "($sp)\n"
     if int(memory_address) > int(memory_address2):
         arm_code += "\tsw " + regi1 + ", " + str(int(memory_address) + 4) + "($sp)\n"
+        arm_code += "\tmove " + "$v0" + ", " + regi1  + "\n"
     else:
         arm_code += "\tsw " + regi1 + ", " + str(int(memory_address) + 4) + "($sp)\n"
+        arm_code += "\tmove " + "$v0" + ", " + regi1  + "\n"
 
     #?if last function
         #arm_code += "\tmove " + regi1 + " " +  str(function_alocated_space-4) + "\n"
@@ -281,6 +287,10 @@ def extractor(list):
 
 
 def read_lines(inter):
+    # TEMPRANOSABER = limpiar_lista(TEMPRANOSABER)
+    # AFUNCIONES = limpiar_lista(AFUNCIONES)
+    # GUARDADOR = limpiar_lista(GUARDADOR)
+
     armc = []
     arm_code_all = ""
     function_alocated_space = 0
@@ -327,8 +337,17 @@ def read_lines(inter):
                     new_parts = parts[0].split(".")
                     arm_code += new_parts[1] + '\n'
                     if new_parts[1] == "main:":
-                        arm_code += "\tjal " + new_parts[0] + '\n'
+                        last_inter_line = inter[i-1].split(' ')
+                        if last_inter_line[0][:-1] in new_parts[0] and last_inter_line[0][:-1] != "":
+                            pass
+                        else:
+                            arm_code += "\tjal " + new_parts[0] + '\n'
                 else:
+                    if i + 1 < len(inter):
+                        next_inter_line =  inter[i+1].split(".")
+                        if parts[0][:-1] in next_inter_line[0]:
+                            i += 1
+                            continue
                     arm_code += parts[0] + '\n'
 
         elif len(parts) == 2:
@@ -765,6 +784,7 @@ def read_lines(inter):
 def codeGenerator(inter):
     print("////////final code///////////")
     mips_code = ".text\n.globl main\n"
+
 
     # Elimina los caracteres de tabulación antes de dividir el texto en líneas
     inter = inter.replace('\t', '')

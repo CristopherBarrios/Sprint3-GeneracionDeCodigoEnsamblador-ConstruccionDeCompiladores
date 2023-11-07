@@ -8,13 +8,15 @@
  	sw $t1, 4($sp)    
  suma:    
  	sub $sp, $sp, 8    
- 	lw $t0, 0($sp)    
- 	lw $t1, 0($sp)    
- 	add $t0, $t0, $t1    
- 	sw $t0, 4($sp)    
+ 	lw $s0, 0($sp)    
+ 	lw $s1, 0($sp)
+    move $s0, $a0   
+    move $s1, $a1  
+ 	add $s0, $s0, $s1    
+ 	sw $s0, 4($sp)    
+ 	move $v0, $s0    
  	add $sp, $sp, 8    
  	jr $ra    
-     
  main:    
  	jal Main    
  	sub $sp, $sp, 0    
@@ -31,9 +33,6 @@
  	li $v0, 10    
  	syscall    
      
-     
-     
-     
  out_int:    
  	li $v0, 1    
  	syscall    
@@ -43,6 +42,6 @@
  	syscall    
  	jr $ra    
  .data    
- text0:	.asciiz "Hola mundojajaja"    
+ text0:	.asciiz "Hola mundo"    
  text1:	.asciiz "\n"    
    
