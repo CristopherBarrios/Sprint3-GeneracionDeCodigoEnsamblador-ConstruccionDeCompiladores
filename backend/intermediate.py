@@ -131,6 +131,8 @@ class Inter(YAPLVisitor):
         self.line += start
         self.visitChildren(ctx)
         end = "func end\n\n"
+        if name == "main":
+            end = "func end main\n\n"
         self.line += end
         self.method_actual.pop()
 
