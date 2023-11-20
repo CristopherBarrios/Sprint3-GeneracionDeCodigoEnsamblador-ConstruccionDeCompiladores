@@ -23,6 +23,13 @@ GUARDADOR = [["$v1",""],["$v0",""]]
 def limpiar_lista(lista):
     return [[reg, valor] for reg, valor in lista if valor.strip() != ""]
 
+def vaciar_lista_si_llena(lista):
+    # Verificar si todos los elementos de la lista están llenos
+    if all(registro[1] for registro in lista):
+        # Vaciar la lista
+        for registro in lista:
+            registro[1] = ""
+
 def whileStatementArmHandler(first_operand,second_operand,operation,inter,i):
     actual_line = inter[i].split(' ')
     next_line = inter[i+1].split(' ')
@@ -78,7 +85,10 @@ def ifStatementArmHandler(first_operand,second_operand,operation,inter,i):
     actual_line = inter[i].split(' ')
 
     arm_code = ''
-    first_ = last_line[2]
+    if len(last_line) > 3:
+        first_ = last_line[2]
+    else:
+        first_ = "[0]"
 
     if first_operand.isnumeric(): 
         memory_address = first_operand
@@ -223,6 +233,8 @@ def operationsFunction(first_operand,second_operand,operation,inter,i):
 
     numero = 0
 
+    if not AAAAAA:
+        AAAAAA.extend(["$a3", "$a2", "$a1", "$a0"])
     
     # Recorrer la lista anidada para encontrar la primera entrada vacía y asignar el valor
     for registro in reversed(SEMPRANOSABER):
@@ -231,6 +243,8 @@ def operationsFunction(first_operand,second_operand,operation,inter,i):
             registro[1] = AAAAAA.pop()
             numero += 1
             break
+        else:
+            vaciar_lista_si_llena(SEMPRANOSABER)
 
     # Recorrer la lista anidada para encontrar la primera entrada vacía y asignar el valor
     for registro in reversed(SEMPRANOSABER):
@@ -239,6 +253,8 @@ def operationsFunction(first_operand,second_operand,operation,inter,i):
             registro[1] = AAAAAA.pop()
             numero += 1
             break
+        else:
+            vaciar_lista_si_llena(SEMPRANOSABER)
 
     arm_code += "\tlw " + regi1 + ", " + str(memory_address) + "($sp)\n"
     arm_code += "\tlw " + regi2 + ", " + str(memory_address) + "($sp)\n"
@@ -586,14 +602,15 @@ def read_lines(inter):
                 next_inter_line = inter[i+1].split(' ')
                 next_next_inter_line = inter[i+2].split(' ')
 
-                if next_inter_line[2] == parts[0] and next_next_inter_line[3] == "out_string,":
-                     # Recorrer la lista anidada para encontrar la primera entrada vacía y asignar el valor
-                    for registro in reversed(AFUNCIONES):
-                        if registro[1] == "":
-                            reg1 = registro[0]
-                            registro[1] = parts[2]
-                            i += 1
-                            break
+                if len(next_inter_line) >= 3 and len(next_next_inter_line) >= 4:
+                    if next_inter_line[2] == parts[0] and next_next_inter_line[3] == "out_string,":
+                        # Recorrer la lista anidada para encontrar la primera entrada vacía y asignar el valor
+                        for registro in reversed(AFUNCIONES):
+                            if registro[1] == "":
+                                reg1 = registro[0]
+                                registro[1] = parts[2]
+                                i += 1
+                                break
 
                     arm_code += "\tla " + reg1 + ", " + "text" + str(contoText) + "\n"
                 else:

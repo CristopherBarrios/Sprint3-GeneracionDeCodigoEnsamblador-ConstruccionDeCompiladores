@@ -12,7 +12,7 @@
  	lw $s1, 0($sp)    
  	move $s0, $a0    
  	move $s1, $a1    
- 	sub $s0, $s0, $s1    
+ 	add $s0, $s0, $s1    
  	sw $s0, 4($sp)    
  	move $v0, $s0    
  	add $sp, $sp, 8    
