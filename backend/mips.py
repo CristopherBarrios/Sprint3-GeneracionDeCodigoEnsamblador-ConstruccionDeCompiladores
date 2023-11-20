@@ -14,6 +14,9 @@ TEMPRANO = ["$t9","$t8", "$t7", "$t6", "$t5", "$t4", "$t3", "$t2", "$t1", "$t0"]
 REGISTERS = ["$s7", "$s6", "$s5", "$s4", "$s3", "$s2", "$s1", "$s0"]
 AAAAAA = ["$a3","$a2","$a1","$a0"]
 
+# Hacer una copia de la lista original
+LISTA = list(AAAAAA)
+
 
 SEMPRANOSABER = [ ["$s7",""],["$s6",""] , ["$s5",""], ["$s4",""], ["$s3",""], ["$s2",""], ["$s1",""], ["$s0",""]]
 TEMPRANOSABER = [["$t9",""],["$t8",""], ["$t7",""],["$t6",""] , ["$t5",""], ["$t4",""], ["$t3",""], ["$t2",""], ["$t1",""], ["$t0",""]]
@@ -29,6 +32,10 @@ def vaciar_lista_si_llena(lista):
         # Vaciar la lista
         for registro in lista:
             registro[1] = ""
+
+def reiniciar_lista():
+    global AAAAAA
+    AAAAAA = list(LISTA)
 
 def whileStatementArmHandler(first_operand,second_operand,operation,inter,i):
     actual_line = inter[i].split(' ')
@@ -421,6 +428,9 @@ def read_lines(inter):
             if parts[0] == "func" and parts[1] == "end":
                 arm_code += "\tadd $sp, $sp, " + str(function_alocated_space)+'\n'
                 function_alocated_space = 0
+                # Verificar si es necesario reiniciar la lista
+                if len(LISTA) > len(AAAAAA):
+                    reiniciar_lista()
                 arm_code += "\tjr $ra\n"
 
             # if parts[0] == "class" and parts[1] == "end":
