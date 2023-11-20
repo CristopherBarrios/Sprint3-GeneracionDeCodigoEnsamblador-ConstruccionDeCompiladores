@@ -557,7 +557,12 @@ def read_lines(inter):
                             registro[1] = resultado
                             break
 
-                    arm_code += "\tla " + reg1 + ", " + str(resultado) + "\n"
+                    if resultado == None:
+                        resultado = REGISTERS.pop()
+                        arm_code += "\tla " + reg1 + ", " + str(resultado) + "\n"
+                        resultado == REGISTERS.append(reg1)
+                    else:
+                        arm_code += "\tla " + reg1 + ", " + str(resultado) + "\n"
                 else:
 
                     # Recorrer la lista anidada para encontrar la primera entrada vacía y asignar el valor
