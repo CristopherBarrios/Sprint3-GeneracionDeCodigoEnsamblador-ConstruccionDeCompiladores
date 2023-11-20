@@ -728,7 +728,7 @@ class Inter(YAPLVisitor):
                                 symbol = "Bool 2"
 
                         elif para.type == "String":
-                                symbol = para.expr.str
+                                symbol = para.expr.strval
 
                         elif para.type == "Int":
                                 if type(para.expr).__name__  != "Int":
