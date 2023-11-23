@@ -113,24 +113,39 @@ def ifStatementArmHandler(first_operand,second_operand,operation,inter,i):
     else:
         memory_address2 = getBracketsContent(second_operand)
 
-    regi1 = REGISTERS.pop()
+    # Recorrer la lista anidada para encontrar la primera entrada vacía y asignar el valor
+    for registro in reversed(TEMPRANOSABER):
+        if registro[1] == first_operand:
+            regi1 = registro[0]
+            break
 
+    # Recorrer la lista anidada para encontrar la primera entrada vacía y asignar el valor
+    for registro in reversed(TEMPRANOSABER):
+        if registro[1] == second_operand:
+            regi2 = registro[0]
+            break
+
+    # regi1 = REGISTERS.pop()
+    # regi2 = REGISTERS.pop()
+##############################################################################
     #des.addDRegister(regi1,[actual_line[0]])
     #des.addDAccess(actual_line[0],[regi1])
 
+
+    numero = extractor(next_line[3])
     arm_code += "\tlw " + regi1 + ", " + str(memory_address) + "($sp)\n"
-    arm_code += "\tcmp " + regi1 + ", #" + str(memory_address2) + "\n"
+    arm_code += "\tbeq " + regi1 + ", "+ regi2 +", .LBB0_" + numero + "\n"
 
     # actual_line [t0,=,m1[0],==,5]
     # next_line [IfZ,t0,Goto,L0]
-    numero = extractor(next_line[3])
-    if  operation == '==': arm_code += "\tbne .LBB0_" + numero + "\n"
-    elif operation == '>': arm_code += "\tblt .LBB0_" + numero + "\n"
-    elif operation == '<': arm_code += "\tbgt .LBB0_" + numero + "\n"
+
+    # if  operation == '==': arm_code += "\tbne .LBB0_" + numero + "\n"
+    # elif operation == '>': arm_code += "\tblt .LBB0_" + numero + "\n"
+    # elif operation == '<': arm_code += "\tbgt .LBB0_" + numero + "\n"
 
     numero = extractor(next_next_line[1])
     # next_next_line ["Goto", "L1"]
-    arm_code += "\tb .LBB0_" + numero + "\n"
+    arm_code += "\tjal .LBB0_" + numero + "\n"
 
     REGISTERS.append(regi1)
 
@@ -397,7 +412,7 @@ def read_lines(inter):
                 else:
                     arm_code += ".LBB0_" + numero + ":\n"
             elif parts[0] == 'L_END_IF':
-                arm_code += "\tb ." + parts[0] + '\n'   #     b .L_END_IF
+                arm_code += "\tjal ." + parts[0] + '\n'   #     b .L_END_IF
                 arm_code += "." + parts[0] + ':\n'      #.L_END_IF:
             elif parts[0] == 'L_END_WHILE':
                 arm_code += "." + parts[0] + ':\n'      #.L_END_WHILE:
@@ -496,6 +511,9 @@ def read_lines(inter):
 
                 arm_code += "\tli " + reg1 + ", " + str(right_side) + "\n"
                 arm_code += "\tsw " + reg1 + ", " + str(memory_address) + "($sp)\n"
+                next_inter_line = inter[i+1].split(' ')
+                if ":" in next_inter_line[0]:
+                    arm_code += "\tjr $ra\n"
                 TEMPRANO.append(reg1)
 
             # m#[#] = t#

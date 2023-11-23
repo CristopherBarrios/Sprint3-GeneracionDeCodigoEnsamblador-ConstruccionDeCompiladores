@@ -816,6 +816,9 @@ class Inter(YAPLVisitor):
                         
                         if self.loColocoONo:
                             self.line += "\t" + equal
+
+                        if not self.loColocoONo:
+                            return value
                         return equal
                     else:
 

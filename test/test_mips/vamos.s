@@ -87,6 +87,20 @@
  	jal out_string,    
  	la $a0, text0    
  	jal out_string,    
+ 	li $t6, 7    
+ 	sw $t6, 4($sp)    
+ 	lw $t1, 4($sp)    
+ 	beq $t1, $t6, .LBB0_0    
+ 	jal .LBB0_1    
+ .LBB0_0:    
+ 	la $a0, text2    
+ 	jal out_string,    
+ 	b .L_END_IF    
+ .LBB0_1:    
+ 	la $a0, text3    
+ 	jal out_string,    
+ 	jal .L_END_IF    
+ .L_END_IF:    
  	li $v0, 10    
  	syscall    
      
@@ -101,4 +115,6 @@
  .data    
  text0:	.asciiz "Hola mundo"    
  text1:	.asciiz "\n"    
+ text2:	.asciiz "Si es 4"    
+ text3:	.asciiz "No es 4"    
    
