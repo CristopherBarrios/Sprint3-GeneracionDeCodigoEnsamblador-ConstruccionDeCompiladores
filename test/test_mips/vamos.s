@@ -4,7 +4,7 @@
  Main:    
  	li $t0, 4    
  	sw $t0, 0($sp)    
- 	li $t1, 4    
+ 	li $t1, 2    
  	sw $t1, 4($sp)    
  suma:    
  	sub $sp, $sp, 8    
@@ -87,9 +87,10 @@
  	jal out_string,    
  	la $a0, text0    
  	jal out_string,    
- 	li $t6, 7    
+ 	la $a0, text1    
+ 	jal out_string,    
+ 	li $t6, 4    
  	sw $t6, 4($sp)    
- 	lw $t1, 4($sp)    
  	beq $t1, $t6, .LBB0_0    
  	jal .LBB0_1    
  .LBB0_0:    

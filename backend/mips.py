@@ -133,7 +133,7 @@ def ifStatementArmHandler(first_operand,second_operand,operation,inter,i):
 
 
     numero = extractor(next_line[3])
-    arm_code += "\tlw " + regi1 + ", " + str(memory_address) + "($sp)\n"
+    # arm_code += "\tlw " + regi1 + ", " + str(memory_address) + "($sp)\n"
     arm_code += "\tbeq " + regi1 + ", "+ regi2 +", .LBB0_" + numero + "\n"
 
     # actual_line [t0,=,m1[0],==,5]
